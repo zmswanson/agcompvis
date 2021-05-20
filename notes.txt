@@ -1,0 +1,39 @@
+# What do I know:
+#.   - 90,000+ images with 6/2/2 train/val/test split
+#.   - Train and val datasets will have binary masks; I need to generate mask for test set and submit to CodaLab
+#.   - 6-8 classifications + background
+#.   - Authors have tested DeepLab V3 and ResNet (Feature Pyramid Network?)
+#.   - Metric is Intersection over Union
+#.   - Top scores from 2020: .639
+#.   - I can make submissions to CodaLab for the 2020 competition (https://competitions.codalab.org/competitions/23732?secret_key=dba10d3a-a676-4c44-9acf-b45dc92c5fcf)
+
+
+# How do I ingest the images + associated data (i.e. mask and boundaries)?
+# What model should I select?
+# How do I incorporate and use PyTorch?
+# How do I train my model? What is the end goal? To generate a binary mask for the val and test sets?
+# How do I validate my model? Is .30-.40 a good metric for me at this point?
+
+# Read through https://www.jeremyjordan.me/semantic-segmentation/
+# Get up to speed with Pytorch: https://pytorch.org/tutorials/beginner/basics/intro.html
+
+To look up:
+ * One-hot encoding
+ * Cross Entropy Loss
+ * unet_learner
+
+x = shape: torch.Size([2, 512, 512, 3]); type: torch.float32
+x = min: 0.0; max: 255.0
+y = shape: torch.Size([2, 512, 512]); class: tensor([  0, 255]); type: torch.int64
+
+
+... people seem to be using a combination of U-Net and Resnet ...
+
+
+Max layer depth = 10
+
+a) load data
+b) transform data
+c) visualize data
+d) create model
+e) train model
