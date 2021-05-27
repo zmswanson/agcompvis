@@ -40,11 +40,12 @@ targets = ['/Users/zswanson/Downloads/supervised/Agriculture-Vision-2021/train/l
 training_dataset = AgVisionDataSet(rgb_inputs=rgb_inputs,
                                        nir_inputs=nir_inputs,
                                        targets=targets,
-                                       transform=ToTensor())
+                                       transform=None)
 
 training_dataloader = data.DataLoader(dataset=training_dataset,
                                       batch_size=2,
                                       shuffle=True)
+
 x, y = next(iter(training_dataloader))
 
 print(f'x = shape: {x.shape}; type: {x.dtype}')

@@ -1,3 +1,6 @@
+# Ignore the data... way too much to store on Git
+dataset/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
