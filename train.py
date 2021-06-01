@@ -1,49 +1,52 @@
 import os
-from argparse import ArgumentParser
 
 import numpy as np
+from pytorch_lightning import callbacks
 import torch
 
 from unet_lightning import LitUNet as Unet
+from dataset import AgVisionDataSet
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from torch.utils.data import DataLoader
 
 
-def main(hparams):
-    model = Unet(hparams)
+def main():
+    model = Unet()
 
-    os.makedirs(hparams.log_dir, exist_ok=True)
+    os.makedirs('lightning_logs', exist_ok=True)
     try:
-        log_dir = sorted(os.listdir(hparams.log_dir))[-1]
+        log_dir = sorted(os.listdir('lightning_logs'))[-1]
     except IndexError:
-        log_dir = os.path.join(hparams.log_dir, 'version_0')
+        log_dir = os.path.join('lightning_logs', 'version_0')
+
+    os.makedirs('checkpoints', exist_ok=True)
+
+    training_dataset = AgVisionDataSet(select_dataset='train', transform=None)
+    val_dataset = AgVisionDataSet(select_dataset='val', transform=None)
+
+    training_dataloader = DataLoader(dataset=training_dataset, batch_size=32, shuffle=True, num_workers=8)
+    val_dataloader = DataLoader(dataset=val_dataset, batch_size=32, num_workers=8)
         
     checkpoint_callback = ModelCheckpoint(
-        filepath=os.path.join(log_dir, 'checkpoints'),
-        save_best_only=False,
+        monitor='val_loss',
+        dirpath='checkpoints/',
+        save_top_k=10,
         verbose=True,
     )
     stop_callback = EarlyStopping(
         monitor='val_loss',
-        mode='auto',
         patience=5,
         verbose=True,
     )
     trainer = Trainer(
-        gpus=1,
-        checkpoint_callback=checkpoint_callback,
-        early_stop_callback=stop_callback,
+        callbacks=[checkpoint_callback, stop_callback],
     )
 
-    trainer.fit(model)
+    trainer.fit(model, train_dataloader=training_dataloader, val_dataloaders=val_dataloader)
+    
+    print(checkpoint_callback.best_model_path, ": ", checkpoint_callback.best_model_score)
 
 
 if __name__ == '__main__':
-    parent_parser = ArgumentParser(add_help=False)
-    parent_parser.add_argument('--dataset', required=True)
-    parent_parser.add_argument('--log_dir', default='lightning_logs')
-
-    parser = Unet.add_model_specific_args(parent_parser)
-    hparams = parser.parse_args()
-
-    main(hparams)
+    main()

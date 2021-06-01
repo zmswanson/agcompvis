@@ -112,14 +112,15 @@ class LitUNet(pl.LightningModule):
             x = upblk(x, downblk_outs[-(i + 2)])
 
         x = self.conv1x1(x)
-        x = self.softmax(x)
-        x = torch.argmax(x, dim=1, keepdim=True)
+        # x = self.softmax(x)
+        # x = torch.argmax(x, dim=1, keepdim=True)
 
         return x
         
     def training_step(self, batch, batch_nb):
         x, y = batch
         y_hat = self.forward(x)
+        # TODO: Need to apply boundary masks to y_hat...
         loss = F.cross_entropy(y_hat, y) 
         tensorboard_logs = {'train_loss': loss}
         return {'loss': loss, 'log': tensorboard_logs}
@@ -127,6 +128,7 @@ class LitUNet(pl.LightningModule):
     def validation_step(self, batch, batch_nb):
         x, y = batch
         y_hat = self.forward(x)
+        # TODO: Need to apply boundary masks to y_hat...
         loss = F.cross_entropy(y_hat, y)
         return {'val_loss': loss}
 
@@ -136,7 +138,7 @@ class LitUNet(pl.LightningModule):
         return {'avg_val_loss': avg_loss, 'log': tensorboard_logs}
 
     def configure_optimizers(self):
-        return torch.optim.RMSprop(self.parameters(), lr=0.1, weight_decay=1e-8)
+        return torch.optim.Adam(self.parameters(), lr=0.001, weight_decay=1e-8)
 
 
 if __name__ == "__main__":
