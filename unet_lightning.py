@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
-from pytorch_model_summary import summary
+# from pytorch_model_summary import summary
+from pytorch_lightning.metrics import functional as FM
 
 def double_conv(in_channels, out_channels):
     """ Performs 2 3x3 convolutions with ReLU activation """
@@ -122,23 +123,38 @@ class LitUNet(pl.LightningModule):
         y_hat = self.forward(x)
         # TODO: Need to apply boundary masks to y_hat...
         loss = F.cross_entropy(y_hat, y) 
-        tensorboard_logs = {'train_loss': loss}
-        return {'loss': loss, 'log': tensorboard_logs}
+        # tensorboard_logs = {'train_loss': loss}
+        self.log('train_loss', loss)
+        return {'loss': loss}
+        # y_pred = torch.argmax(self.softmax(y_hat),1)
+        # result = pl.EvalResult(checkpoint_on=loss)
+        # acc = FM.accuracy(y_pred, y, num_classes=self.output_dim)
+        # result = pl.TrainResult(minimize=loss)
+        # result.log('loss', loss)
+        # result.log('train_acc', acc)
+        # return result
 
     def validation_step(self, batch, batch_nb):
         x, y = batch
         y_hat = self.forward(x)
         # TODO: Need to apply boundary masks to y_hat...
         loss = F.cross_entropy(y_hat, y)
+        self.log('val_loss', loss)
         return {'val_loss': loss}
+        # y_pred = torch.argmax(self.softmax(y_hat),1)
+        # result = pl.EvalResult(checkpoint_on=loss, early_stop_on=loss)
+        # acc = FM.accuracy(y_pred, y, num_classes=self.output_dim)
+        # result.log('val_loss', loss, prog_bar=True, on_step=True)
+        # result.log('val_acc', acc, prog_bar=True, on_step=True)
+        # return result
 
-    def validation_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        tensorboard_logs = {'val_loss': avg_loss}
-        return {'avg_val_loss': avg_loss, 'log': tensorboard_logs}
+    # def validation_end(self, outputs):
+    #     avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+    #     tensorboard_logs = {'val_loss': avg_loss}
+    #     return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=0.001, weight_decay=1e-8)
+        return torch.optim.Adam(self.parameters(), lr=0.0001, weight_decay=1e-8)
 
 
 if __name__ == "__main__":

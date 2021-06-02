@@ -12,6 +12,8 @@ from torch.utils.data import DataLoader
 
 
 def main():
+#    torch.set_num_threads(4)
+    torch.cuda.empty_cache()
     model = Unet()
 
     os.makedirs('lightning_logs', exist_ok=True)
@@ -25,26 +27,29 @@ def main():
     training_dataset = AgVisionDataSet(select_dataset='train', transform=None)
     val_dataset = AgVisionDataSet(select_dataset='val', transform=None)
 
-    training_dataloader = DataLoader(dataset=training_dataset, batch_size=32, shuffle=True, num_workers=8)
-    val_dataloader = DataLoader(dataset=val_dataset, batch_size=32, num_workers=8)
+    training_dataloader = DataLoader(dataset=training_dataset, batch_size=8, shuffle=True, num_workers=8)
+    val_dataloader = DataLoader(dataset=val_dataset, batch_size=8, num_workers=8)
         
     checkpoint_callback = ModelCheckpoint(
         monitor='val_loss',
         dirpath='checkpoints/',
-        save_top_k=10,
+        save_top_k=5,
         verbose=True,
     )
     stop_callback = EarlyStopping(
         monitor='val_loss',
         patience=5,
         verbose=True,
+        check_on_train_epoch_end=True,
     )
     trainer = Trainer(
+        gpus=2,
         callbacks=[checkpoint_callback, stop_callback],
+        max_epochs=40,
+        resume_from_checkpoint='checkpoints/epoch=19-step=71179.ckpt',
     )
 
     trainer.fit(model, train_dataloader=training_dataloader, val_dataloaders=val_dataloader)
-    
     print(checkpoint_callback.best_model_path, ": ", checkpoint_callback.best_model_score)
 
 

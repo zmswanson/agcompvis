@@ -5,7 +5,7 @@
 import torch
 import torch.nn as nn
 from torch.nn.modules.activation import ReLU
-from pytorch_model_summary import summary
+# from pytorch_model_summary import summary
 
 def double_conv(in_c, out_c):
     """ Performs 2 3x3 convolutions with ReLU activation """
@@ -108,4 +108,5 @@ if __name__ == "__main__":
     image = torch.rand((1, 4, 512, 512))
 
     unet = UNet()
-    print(summary(unet, image))
+    # print(summary(unet, image))
+    unet(image)
