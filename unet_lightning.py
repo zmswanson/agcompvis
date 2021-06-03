@@ -122,7 +122,7 @@ class LitUNet(pl.LightningModule):
         x, y, b = batch
         y_hat = self.forward(x)
         y_hat = y_hat * b
-        loss = F.cross_entropy(input=y_hat, target=y, weight=torch.FloatTensor([1.0, 1.64, 1.0, 1.93, 1.12, 2.54, 2.79, 2.07, 1.22])) 
+        loss = F.cross_entropy(input=y_hat, target=y, weight=torch.tensor([1.0, 1.64, 1.0, 1.93, 1.12, 2.54, 2.79, 2.07, 1.22])) 
         self.log('train_loss', loss)
         return {'loss': loss}
 
@@ -130,7 +130,7 @@ class LitUNet(pl.LightningModule):
         x, y, b = batch
         y_hat = self.forward(x)
         y_hat = y_hat * b
-        loss = F.cross_entropy(input=y_hat, target=y, weight=torch.FloatTensor([1.0, 1.64, 1.0, 1.93, 1.12, 2.54, 2.79, 2.07, 1.22]))
+        loss = F.cross_entropy(input=y_hat, target=y, weight=torch.tensor([1.0, 1.64, 1.0, 1.93, 1.12, 2.54, 2.79, 2.07, 1.22]))
         self.log('val_loss', loss)
         return {'val_loss': loss}
 
