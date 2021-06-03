@@ -23,23 +23,27 @@ class AgVisionDataSet(data.Dataset):
         self.rgb_inputs = [rgb_path + s for s in sorted(os.listdir(rgb_path))]
         self.nir_inputs = [nir_path + s for s in sorted(os.listdir(nir_path))]
 
-        dp1_path = f"dataset/{self.dataset}/labels/double_plant/"
-        dd2_path = f"dataset/{self.dataset}/labels/drydown/"
-        er3_path = f"dataset/{self.dataset}/labels/endrow/"
-        nd4_path = f"dataset/{self.dataset}/labels/nutrient_deficiency/"
-        ps5_path = f"dataset/{self.dataset}/labels/planter_skip/"
-        wa6_path = f"dataset/{self.dataset}/labels/water/"
-        ww7_path = f"dataset/{self.dataset}/labels/waterway/"
-        wc8_path = f"dataset/{self.dataset}/labels/weed_cluster/"
+        if self.dataset in ["train", "val"]:
+            dp1_path = f"dataset/{self.dataset}/labels/double_plant/"
+            dd2_path = f"dataset/{self.dataset}/labels/drydown/"
+            er3_path = f"dataset/{self.dataset}/labels/endrow/"
+            nd4_path = f"dataset/{self.dataset}/labels/nutrient_deficiency/"
+            ps5_path = f"dataset/{self.dataset}/labels/planter_skip/"
+            wa6_path = f"dataset/{self.dataset}/labels/water/"
+            ww7_path = f"dataset/{self.dataset}/labels/waterway/"
+            wc8_path = f"dataset/{self.dataset}/labels/weed_cluster/"
 
-        self.double_plant = [dp1_path + s for s in sorted(os.listdir(dp1_path))]
-        self.drydown      = [dd2_path + s for s in sorted(os.listdir(dd2_path))]
-        self.endrow       = [er3_path + s for s in sorted(os.listdir(er3_path))]
-        self.nutrient_def = [nd4_path + s for s in sorted(os.listdir(nd4_path))]
-        self.planter_skip = [ps5_path + s for s in sorted(os.listdir(ps5_path))]
-        self.water        = [wa6_path + s for s in sorted(os.listdir(wa6_path))]
-        self.waterway     = [ww7_path + s for s in sorted(os.listdir(ww7_path))]
-        self.weed_cluster = [wc8_path + s for s in sorted(os.listdir(wc8_path))]
+            self.double_plant = [dp1_path + s for s in sorted(os.listdir(dp1_path))]
+            self.drydown      = [dd2_path + s for s in sorted(os.listdir(dd2_path))]
+            self.endrow       = [er3_path + s for s in sorted(os.listdir(er3_path))]
+            self.nutrient_def = [nd4_path + s for s in sorted(os.listdir(nd4_path))]
+            self.planter_skip = [ps5_path + s for s in sorted(os.listdir(ps5_path))]
+            self.water        = [wa6_path + s for s in sorted(os.listdir(wa6_path))]
+            self.waterway     = [ww7_path + s for s in sorted(os.listdir(ww7_path))]
+            self.weed_cluster = [wc8_path + s for s in sorted(os.listdir(wc8_path))]
+
+        bound_path = f"dataset/{self.dataset}/boundaries/"
+        self.boundaries = [bound_path + s for s in sorted(os.listdir(bound_path))]
 
         self.transform = transform
         self.inputs_dtype = torch.float32
@@ -52,15 +56,17 @@ class AgVisionDataSet(data.Dataset):
         # Select the sample
         rgb_input_ID = self.rgb_inputs[index]
         nir_input_ID = self.nir_inputs[index]
+        boundary_ID  = self.boundaries[index]
         
-        double_plant_ID = self.double_plant[index]
-        drydown_ID      = self.drydown[index]
-        endrow_ID       = self.endrow[index]
-        nutrient_def_ID = self.nutrient_def[index]
-        planter_skip_ID = self.planter_skip[index]
-        water_ID        = self.water[index]
-        waterway_ID     = self.waterway[index]
-        weed_cluster_ID = self.weed_cluster[index]
+        if self.dataset in ["train", "val"]:
+            double_plant_ID = self.double_plant[index]
+            drydown_ID      = self.drydown[index]
+            endrow_ID       = self.endrow[index]
+            nutrient_def_ID = self.nutrient_def[index]
+            planter_skip_ID = self.planter_skip[index]
+            water_ID        = self.water[index]
+            waterway_ID     = self.waterway[index]
+            weed_cluster_ID = self.weed_cluster[index]
 
         # Load input
         x0 = read_image(rgb_input_ID).type(self.inputs_dtype)
@@ -85,6 +91,12 @@ class AgVisionDataSet(data.Dataset):
         # Preprocessing
         if self.transform is not None:
             x, y = self.transform(x, y)
+
+        if self.dataset in ['test']:
+            id = os.path.basename(rgb_input_ID).split('.')[0]
+            b = read_image(boundary_ID).type(self.inputs_dtype) / 255.0
+            b = b[0, :, :]
+            return x, y, b, id
 
         return x, y
 

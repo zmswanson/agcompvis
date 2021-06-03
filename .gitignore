@@ -1,6 +1,7 @@
 # Ignore the data and checkpoints... way too much to store on Git
 dataset/*
 checkpoints/*
+labels/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
