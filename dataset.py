@@ -100,6 +100,7 @@ class AgVisionDataSet(data.Dataset):
             id = os.path.basename(rgb_input_ID).split('.')[0]
             return x, y, b, id
 
+        b = torch.reshape(b, (1, 512, 512))
         b = torch.repeat_interleave(b, 9, dim=0)
         return x, y, b
 
