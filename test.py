@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 from pytorch_lightning.utilities.cloud_io import load
 import torch
@@ -14,6 +15,8 @@ from torchvision.io import read_image
 from PIL import Image
 
 sft_mx = nn.Softmax2d()
+start_ind = int(sys.argv[1])
+print(start_ind)
 
 mapping = {'bg': [0, 0, 0, 200],
             'dp': [255, 0, 0, 200],
@@ -32,10 +35,15 @@ rgb_path = f"dataset/test/images/rgb/"
 model = Unet.load_from_checkpoint('checkpoints/epoch=21-step=78297.ckpt')
 model.eval()
 
-test_data = AgVisionDataSet('test')
+test_data = AgVisionDataSet('test', start_index=start_ind)
 loader = iter(DataLoader(dataset=test_data, batch_size=1))
 
-for i in range(len(os.listdir(rgb_path))):
+if int(int(sys.argv[2]) == 0):
+    worker_len = range(len(os.listdir(rgb_path)[start_ind:]))
+else:
+    worker_len = range(int(sys.argv[2]))
+
+for i in worker_len:
     x, y, b, id = next(loader)
 
     label_path = 'labels/' + id[0] + '.png'

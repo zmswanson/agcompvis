@@ -12,7 +12,6 @@ from torch.utils.data import DataLoader
 
 
 def main():
-#    torch.set_num_threads(4)
     torch.cuda.empty_cache()
     model = Unet()
 
@@ -33,12 +32,12 @@ def main():
     checkpoint_callback = ModelCheckpoint(
         monitor='val_loss',
         dirpath='checkpoints/',
-        save_top_k=5,
+        save_top_k=3,
         verbose=True,
     )
     stop_callback = EarlyStopping(
         monitor='val_loss',
-        patience=5,
+        patience=8,
         verbose=True,
         check_on_train_epoch_end=True,
     )
@@ -46,7 +45,6 @@ def main():
         gpus=2,
         callbacks=[checkpoint_callback, stop_callback],
         max_epochs=40,
-        resume_from_checkpoint='checkpoints/epoch=19-step=71179.ckpt',
     )
 
     trainer.fit(model, train_dataloader=training_dataloader, val_dataloaders=val_dataloader)

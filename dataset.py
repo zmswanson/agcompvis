@@ -11,7 +11,7 @@ import os
 from PIL import Image
 
 class AgVisionDataSet(data.Dataset):
-    def __init__(self, select_dataset="train", transform=None):
+    def __init__(self, select_dataset="train", transform=None, start_index=0):
         if select_dataset in ['train', 'val', 'test']:
             self.dataset = select_dataset
         else:
@@ -20,8 +20,8 @@ class AgVisionDataSet(data.Dataset):
         rgb_path = f"dataset/{self.dataset}/images/rgb/"
         nir_path = f"dataset/{self.dataset}/images/nir/"
 
-        self.rgb_inputs = [rgb_path + s for s in sorted(os.listdir(rgb_path))]
-        self.nir_inputs = [nir_path + s for s in sorted(os.listdir(nir_path))]
+        self.rgb_inputs = [rgb_path + s for s in sorted(os.listdir(rgb_path))[start_index:]]
+        self.nir_inputs = [nir_path + s for s in sorted(os.listdir(nir_path))[start_index:]]
 
         if self.dataset in ["train", "val"]:
             dp1_path = f"dataset/{self.dataset}/labels/double_plant/"
@@ -33,17 +33,17 @@ class AgVisionDataSet(data.Dataset):
             ww7_path = f"dataset/{self.dataset}/labels/waterway/"
             wc8_path = f"dataset/{self.dataset}/labels/weed_cluster/"
 
-            self.double_plant = [dp1_path + s for s in sorted(os.listdir(dp1_path))]
-            self.drydown      = [dd2_path + s for s in sorted(os.listdir(dd2_path))]
-            self.endrow       = [er3_path + s for s in sorted(os.listdir(er3_path))]
-            self.nutrient_def = [nd4_path + s for s in sorted(os.listdir(nd4_path))]
-            self.planter_skip = [ps5_path + s for s in sorted(os.listdir(ps5_path))]
-            self.water        = [wa6_path + s for s in sorted(os.listdir(wa6_path))]
-            self.waterway     = [ww7_path + s for s in sorted(os.listdir(ww7_path))]
-            self.weed_cluster = [wc8_path + s for s in sorted(os.listdir(wc8_path))]
+            self.double_plant = [dp1_path + s for s in sorted(os.listdir(dp1_path))[start_index:]]
+            self.drydown      = [dd2_path + s for s in sorted(os.listdir(dd2_path))[start_index:]]
+            self.endrow       = [er3_path + s for s in sorted(os.listdir(er3_path))[start_index:]]
+            self.nutrient_def = [nd4_path + s for s in sorted(os.listdir(nd4_path))[start_index:]]
+            self.planter_skip = [ps5_path + s for s in sorted(os.listdir(ps5_path))[start_index:]]
+            self.water        = [wa6_path + s for s in sorted(os.listdir(wa6_path))[start_index:]]
+            self.waterway     = [ww7_path + s for s in sorted(os.listdir(ww7_path))[start_index:]]
+            self.weed_cluster = [wc8_path + s for s in sorted(os.listdir(wc8_path))[start_index:]]
 
         bound_path = f"dataset/{self.dataset}/boundaries/"
-        self.boundaries = [bound_path + s for s in sorted(os.listdir(bound_path))]
+        self.boundaries = [bound_path + s for s in sorted(os.listdir(bound_path))[start_index:]]
 
         self.transform = transform
         self.inputs_dtype = torch.float32
@@ -76,14 +76,14 @@ class AgVisionDataSet(data.Dataset):
         y = torch.zeros((1, 512, 512))
 
         if self.dataset in ["train", "val"]:
-            y = torch.cat([y, normalize(read_image(double_plant_ID).type(self.targets_dtype))], dim=0)
-            y = torch.cat([y, normalize(read_image(drydown_ID).type(self.targets_dtype)) * 2], dim=0)
-            y = torch.cat([y, normalize(read_image(endrow_ID).type(self.targets_dtype)) * 3], dim=0)
-            y = torch.cat([y, normalize(read_image(nutrient_def_ID).type(self.targets_dtype)) * 4], dim=0)
-            y = torch.cat([y, normalize(read_image(planter_skip_ID).type(self.targets_dtype)) * 5], dim=0)
-            y = torch.cat([y, normalize(read_image(water_ID).type(self.targets_dtype)) * 6], dim=0)
-            y = torch.cat([y, normalize(read_image(waterway_ID).type(self.targets_dtype)) * 7], dim=0)
-            y = torch.cat([y, normalize(read_image(weed_cluster_ID).type(self.targets_dtype)) * 8], dim=0)
+            y = torch.cat([y, read_image(double_plant_ID).type(self.targets_dtype) / 255], dim=0)
+            y = torch.cat([y, read_image(drydown_ID).type(self.targets_dtype) * 2 / 255], dim=0)
+            y = torch.cat([y, read_image(endrow_ID).type(self.targets_dtype) * 3 / 255], dim=0)
+            y = torch.cat([y, read_image(nutrient_def_ID).type(self.targets_dtype) * 4 / 255], dim=0)
+            y = torch.cat([y, read_image(planter_skip_ID).type(self.targets_dtype) * 5 / 255], dim=0)
+            y = torch.cat([y, read_image(water_ID).type(self.targets_dtype) * 6 / 255], dim=0)
+            y = torch.cat([y, read_image(waterway_ID).type(self.targets_dtype) * 7 / 255], dim=0)
+            y = torch.cat([y, read_image(weed_cluster_ID).type(self.targets_dtype) * 8 / 255], dim=0)
             y = torch.argmax(y, dim=0, keepdim=True)
 
             y = torch.squeeze(y)
@@ -92,13 +92,15 @@ class AgVisionDataSet(data.Dataset):
         if self.transform is not None:
             x, y = self.transform(x, y)
 
+        
+        b = read_image(boundary_ID).type(self.inputs_dtype) / 255.0
+        b = b[0, :, :]
+
         if self.dataset in ['test']:
             id = os.path.basename(rgb_input_ID).split('.')[0]
-            b = read_image(boundary_ID).type(self.inputs_dtype) / 255.0
-            b = b[0, :, :]
             return x, y, b, id
 
-        return x, y
+        return x, y, b
 
 if __name__ == '__main__':
     training_dataset = AgVisionDataSet(select_dataset='train', transform=None)

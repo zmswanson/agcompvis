@@ -119,34 +119,20 @@ class LitUNet(pl.LightningModule):
         return x
         
     def training_step(self, batch, batch_nb):
-        x, y = batch
+        x, y, b = batch
         y_hat = self.forward(x)
-        # TODO: Need to apply boundary masks to y_hat...
-        loss = F.cross_entropy(y_hat, y) 
-        # tensorboard_logs = {'train_loss': loss}
+        y_hat = y_hat * b
+        loss = F.cross_entropy(y_hat, y, weight=torch.FloatTensor([1.0, 1.64, 1.0, 1.93, 1.12, 2.54, 2.79, 2.07, 1.22])) 
         self.log('train_loss', loss)
         return {'loss': loss}
-        # y_pred = torch.argmax(self.softmax(y_hat),1)
-        # result = pl.EvalResult(checkpoint_on=loss)
-        # acc = FM.accuracy(y_pred, y, num_classes=self.output_dim)
-        # result = pl.TrainResult(minimize=loss)
-        # result.log('loss', loss)
-        # result.log('train_acc', acc)
-        # return result
 
     def validation_step(self, batch, batch_nb):
-        x, y = batch
+        x, y, b = batch
         y_hat = self.forward(x)
-        # TODO: Need to apply boundary masks to y_hat...
-        loss = F.cross_entropy(y_hat, y)
+        y_hat = y_hat * b
+        loss = F.cross_entropy(y_hat, y, weight=torch.FloatTensor([1.0, 1.64, 1.0, 1.93, 1.12, 2.54, 2.79, 2.07, 1.22]))
         self.log('val_loss', loss)
         return {'val_loss': loss}
-        # y_pred = torch.argmax(self.softmax(y_hat),1)
-        # result = pl.EvalResult(checkpoint_on=loss, early_stop_on=loss)
-        # acc = FM.accuracy(y_pred, y, num_classes=self.output_dim)
-        # result.log('val_loss', loss, prog_bar=True, on_step=True)
-        # result.log('val_acc', acc, prog_bar=True, on_step=True)
-        # return result
 
     # def validation_end(self, outputs):
     #     avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
